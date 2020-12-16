@@ -113,7 +113,7 @@ const getSourceCodeLines = modulePath => {
 		isValidPath: true,
 		lines: stripTopCommentary( text.trim().split( LINE_BRK_PATTERN ) )
 	};
-}
+};
 
 /**
  * @param {FilePath[]} styleOutputList a list into which to collect all non-referenced CSS import source paths mentioned in the current module
@@ -130,11 +130,11 @@ const getStylePathRegistrar = ( styleOutputList, ownerPath ) => sourceExpression
 };
 
 /**
- * @param {ScriptImportGraphEntry[]} scriptOutputList a list into which to collect all possible script file paths for script import source paths mentioned in the current module
+ * @param {ScriptImport[]} scriptOutputList a list into which to collect all possible script file paths for script import source paths mentioned in the current module
  * @param {FilePath} ownerPath absolute path of the current module containing the import/require expressions
  * @returns {(sourceExpression: string) => void} Registrar
  * @see getImportPathFrom for further details on the sourceExpression registrar argument
- * @see ScriptImportGraphEntry for further details on contents of an import graph entry
+ * @see ScriptImportEntry for further details on contents of an import graph entry
  */
 const getScriptPathRegistrar = ( scriptOutputList, ownerPath ) => sourceExpression => {
 	const path = getImportPathFrom( sourceExpression );
@@ -143,10 +143,9 @@ const getScriptPathRegistrar = ( scriptOutputList, ownerPath ) => sourceExpressi
 	}
 	const extMatch = path.match( SOURCE_EXT_PATTERN );
 	if( extMatch !== null ) {
-		SCRIPT_EXTS.includes( extMatch[ 1 ] ) && scriptOutputList.push({
-			key: path,
-			paths: [ getChildAbsolutePath( ownerPath, path ) ]
-		});
+		SCRIPT_EXTS.includes( extMatch[ 1 ] ) && scriptOutputList.push(
+			getChildAbsolutePath( ownerPath, path )
+		);
 		return;
 	}
 	let absolutePathPrefix = getChildAbsolutePath( ownerPath, path );
@@ -167,7 +166,7 @@ const getScriptPathRegistrar = ( scriptOutputList, ownerPath ) => sourceExpressi
  * @param {FilePath} modulePath absolute path of the current module whose dependencies are being collected
  * @returns {{
  * 		isValidPath: boolean,
- * 		scripts: ScriptImportGraphEntry[],
+ * 		scripts: ScriptImportEntry[],
  * 		styles: FilePath[]
  * }} Module dependency import absolute file paths for scripts and styles
  */
@@ -204,7 +203,7 @@ const pullJsDependencyPaths = modulePath => {
 
 /**
  * @param {FilePath} entryModulePath  entry module absolute path
- * @param {ScriptImportGraphEntry[][]} graph
+ * @param {FilePath[][]} graph
  * @param {{[x:string]: FilePath[]}} cssMap contains a list of css  absolute paths per js/ts module where the key equals js/ts module absolute path
  * @returns {FilePath[]} Ordered absolute paths of css module imports queue from the deepest nested import to the entry module imports
  */
@@ -225,12 +224,12 @@ const buildCssDependencyQueue = ( entryModulePath, graph, cssMap ) => {
 	}
 	const visitedMap = {};
 	for( let g = graph.length; g--; ) {
-		for( const { key: entryKey } of graph[ g ] ) {
-			if( entryKey in visitedMap ) {
+		for( const modulePath of graph[ g ] ) {
+			if( modulePath in visitedMap ) {
 				continue;
 			}
-			visitedMap[ entryKey ] = true;
-			enqueue( entryKey );
+			visitedMap[ modulePath ] = true;
+			enqueue( modulePath );
 		}
 	}
 	if( !( entryModulePath in visitedMap ) ) {
@@ -240,7 +239,7 @@ const buildCssDependencyQueue = ( entryModulePath, graph, cssMap ) => {
 };
 
 /**
- * @param {ScriptImportGraphEntry[][]} graph js/ts import graph containing js/ts absolute paths
+ * @param {FilePath[][]} graph js/ts import graph containing js/ts absolute paths
  * @param {{[x:string]: FilePath[]}} cssMap contains a list of css absolute paths per js/ts module import path argument where key equals js/ts module import path argument
  * @param {FilePath} modulePath js/ts module absolute path
  * @param {FilePath} [sourcePath] source path string parameter supplied for import/require expression in the module source code
@@ -251,9 +250,9 @@ const buildCssDependencyQueue = ( entryModulePath, graph, cssMap ) => {
  * }} module build attempt outcome
  */
 const buildImportGraphInto = (
-	graph, cssMap, modulePath, sourcePath = modulePath, depth = 0
+	graph, cssMap, modulePath, depth = 0
 ) => {
-	if( sourcePath in cssMap ) {
+	if( modulePath in cssMap ) {
 		return {
 			redundant: true,
 			success: false
@@ -265,24 +264,28 @@ const buildImportGraphInto = (
 	if( isValidPath === false ) {
 		return { success: isValidPath };
 	}
-	cssMap[ sourcePath ] = styles;
+	cssMap[ modulePath ] = styles;
 	if( isEmpty( scripts ) ) {
 		return { success: true };
 	}
 	if( !Array.isArray( graph[ depth ] ) ) {
 		graph[ depth ] = [];
 	}
-	graph[ depth ].push( ...scripts );
-	scripts.forEach(({ key, paths }) => {
+	for( let { paths } of scripts ) {
+		const existingMatch = paths.find( p => p in cssMap );
+		if( !isEmpty( existingMatch ) ) {
+			paths = [ existingMatch ];
+		}
 		for( const path of paths ) {
 			const result = buildImportGraphInto(
-				graph, cssMap, path, key, depth + 1
+				graph, cssMap, path, depth + 1
 			);
 			if( result.success || result.redundant ) {
+				graph[ depth ].push( path );
 				break;
 			}
 		}
-	});
+	};
 	return { success: true };
 };
 
@@ -327,5 +330,5 @@ export default CssOrder;
  * @typedef {{
  * 		key: string,
  * 		paths: FilePath[]
- * }} ScriptImportGraphEntry
+ * }} ScriptImportEntry
  */
