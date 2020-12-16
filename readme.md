@@ -51,7 +51,9 @@ Furthermore, all non-referenced css import/require expressions to be curated are
 ### Usage Steps
 
 open the command line terminal
+
 cd into the project root or any other preferred location within the project.
+
 run `ordercss <main entry module path>`
 
 #### The mainEntryModulePath Argument
