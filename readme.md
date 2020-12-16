@@ -1,7 +1,9 @@
 # OrderCSS CLI
 
 **Name:** OrderCSS
+
 **Install:** npm i -D ordercss
+
 **Usage:**  `ordercss <main entry module path>`
 
 # Intro
