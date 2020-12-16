@@ -68,6 +68,10 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/steveswork/ordercss.git"
+  },
   "scripts": {
     "build": "babel-node index.js",
     "compile": "eslint --fix && npm run build",

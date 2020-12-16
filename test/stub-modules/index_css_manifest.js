@@ -1,5 +1,3 @@
-require('../../a');
-require('../../b');
-require('../../c');
-require('../../d');
-require('../../e');
+require('./d/e/style.css');
+require('./d/style.css');
+require('./b/style.css');
