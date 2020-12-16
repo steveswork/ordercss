@@ -39,7 +39,7 @@ It is advisable to make in advance, within the main entry script module, a non-r
  
 ### Requirements
 
-Only script module import/require expressions with path argument starting with at least a dot **(.)** are currently examined for non-referenced CSS module usage.
+Only script module import/require expressions with path argument starting with at least a dot **(.)** are currently inspected for non-referenced CSS module usage.
 
 Only non-referenced CSS module import/require expressions with the following extensions are currently curated: **.css, .less, .sass, .scss .stylus**
 
@@ -60,7 +60,7 @@ run `ordercss <main entry module path>`
 
 #### The mainEntryModulePath Argument
 
-The lone ***mainEntryModulePath*** is a required argument bearing the file location of a module whose dependency graph would be examined for non-referenced css module imports and curated. The expected parameter value is either the absolute path to the entry module file or the entry module file path relative to the current working directory.
+The lone ***mainEntryModulePath*** is a required argument bearing the file location of a module whose dependency graph would be inspected for non-referenced css module imports and curated. The expected parameter value is either the absolute path to the entry module file or the entry module file path relative to the current working directory.
 
 
 # Prologue
