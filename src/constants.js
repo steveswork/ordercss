@@ -1,0 +1,12 @@
+export const JSX_EXT_PATTERN = /^\.[j|t]sx$/;
+export const requirePattern = 'require(\\s+|\\s*\\(\\s*)[\',"]([^\',"]*)[\',"](\\s*\\))?';
+export const LINE_BRK_PATTERN = /\s*[\r\n]+\s*/g;
+export const OS_PATH_SEPARATOR_PATTERN = /[/\\]+/g;
+export const OUTPUT_FILENAME_IDENTIFIER = '_css_manifest';
+export const OUTPUT_FILENAME_PATTERN = new RegExp( `.+${ OUTPUT_FILENAME_IDENTIFIER }(\\.[j,t]sx?)?` );
+export const PATH_STR_EXP_MIN_LEN = 3;
+export const REQUIRE_SOURCE_PATTERN = new RegExp( requirePattern, 'g' );
+export const SCRIPT_EXTS = Object.freeze([ '.js', '.jsx', '.ts', '.tsx' ]);
+export const STYLE_EXTS = Object.freeze([ '.css', '.less', '.sass', '.scss', '.stylus' ]);
+export const SOURCE_EXT_PATTERN = new RegExp( `\\.(${ SCRIPT_EXTS.concat( STYLE_EXTS ).join( '|' ).replace( /\./g, '' ) })$` );
+export const STYLE_LINE_MARKER = new RegExp( `\/\/\\s*--\\s*(${ requirePattern }|import\\s+[',"]([^',"]*)[',"])` );
