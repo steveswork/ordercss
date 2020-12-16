@@ -33,7 +33,7 @@ const getCssModuleCalc = outputFilePath => {
 export const getCssImportOrder = entryModulePath => ( new Order( entryModulePath ) ).calculate();
 
 /**
- * Generates a module output file in congruence with specifications stated in the `readme.txt`
+ * Generates a module output file in congruence with specifications stated in the `readme.md`
  *
  * @param {FilePath[]} cssImportPaths an ordered array of css module absolute paths
  * @param {FilePath} entryModulePath root module absolute path (in a next.js application: could refer to the current page module)
