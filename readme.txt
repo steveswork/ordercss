@@ -46,5 +46,5 @@ examined for non-referenced css imports and curated. The expected path is either
 relative to the current working directory.
 
 Prologue: Consideration was given to creating this package as webpack plugin. Also considered were others using other
-build systems and the continued compatibility with all complimentary build tools. The eventual decision was to provide 
+build systems and the continued compatibility with all complementary build tools. The eventual decision was to provide 
 this package a standalone entity at the present time.
