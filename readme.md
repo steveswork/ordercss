@@ -54,7 +54,7 @@ run `ordercss <main entry module path>`
 
 #### The mainEntryModulePath Argument
 
-The lone ***mainEntryModulePath*** is a required argument bearing the file location of a module whose dependency graph would be examined for non-referenced css module imports and curated. The expected parameter value is either the absolute path to the entry module or the module path relative to the current working directory.
+The lone ***mainEntryModulePath*** is a required argument bearing the file location of a module whose dependency graph would be examined for non-referenced css module imports and curated. The expected parameter value is either the absolute path to the entry module file or the entry module file path relative to the current working directory.
 
 
 # Prologue
