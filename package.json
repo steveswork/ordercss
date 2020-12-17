@@ -78,5 +78,5 @@
     "dev": "clear && npm run dev-watch",
     "test": "eslint --fix && jest --watchAll"
   },
-  "version": "1.0.1"
+  "version": "1.0.2"
 }
