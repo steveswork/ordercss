@@ -2,7 +2,7 @@
 
 **Name:** OrderCSS
 
-**Install:** npm i -D ordercss
+**Install:** npm i -D @webkrafters/ordercss
 
 **Usage:**  `ordercss <main entry module path>`
 
