@@ -116,6 +116,20 @@ const getSourceCodeLines = modulePath => {
 };
 
 /**
+ * @param {string[]} lines code lines
+ * @returns {string} a single import statement
+ */
+const dequeueImportStatement = lines => {
+	const stmtTokens = [];
+	let curToken;
+	do {
+		curToken = lines.shift();
+		stmtTokens.push( curToken );
+	} while( !/[',"];?$/.test( curToken ) && lines.length );
+	return stmtTokens.join( ' ' ).replace( /\s+/, ' ' );
+};
+
+/**
  * @param {FilePath[]} styleOutputList a list into which to collect all non-referenced CSS import source paths mentioned in the current module
  * @param {FilePath} ownerPath absolute path of the current module containing the import/require expressions
  * @returns {(sourceExpression: string) => void} Registrar
@@ -181,7 +195,7 @@ const pullJsDependencyPaths = modulePath => {
 	const registerStylePath = getStylePathRegistrar( styles, modulePath );
 	while( lines.length ) {
 		if( lines[ 0 ].startsWith( 'import ' ) ) {
-			registerScriptPath( lines.shift() );
+			registerScriptPath( dequeueImportStatement( lines ));
 			continue;
 		}
 		if( STYLE_LINE_MARKER.test( lines[ 0 ] ) ) {
@@ -202,12 +216,12 @@ const pullJsDependencyPaths = modulePath => {
 };
 
 /**
- * @param {FilePath} entryModulePath  entry module absolute path
  * @param {FilePath[][]} graph
  * @param {{[x:string]: FilePath[]}} cssMap contains a list of css  absolute paths per js/ts module where the key equals js/ts module absolute path
+ * @param {FilePath} entryModulePath  entry module absolute path
  * @returns {FilePath[]} Ordered absolute paths of css module imports queue from the deepest nested import to the entry module imports
  */
-const buildCssDependencyQueue = ( entryModulePath, graph, cssMap ) => {
+const buildCssDependencyQueue = ( graph, cssMap, entryModulePath ) => {
 	if( isEmpty( cssMap ) ) {
 		return [];
 	}
@@ -312,12 +326,8 @@ CssOrder.prototype.calculate = function () {
 	}
 	const importGraph = [];
 	const cssImportMap = {};
-	buildImportGraphInto(
-		importGraph,
-		cssImportMap,
-		this.entryModulePath
-	);
-	this.orderedCssPaths = buildCssDependencyQueue( this.entryModulePath, importGraph, cssImportMap );
+	buildImportGraphInto( importGraph, cssImportMap, this.entryModulePath );
+	this.orderedCssPaths = buildCssDependencyQueue( importGraph, cssImportMap, this.entryModulePath );
 	return this.orderedCssPaths;
 };
 
