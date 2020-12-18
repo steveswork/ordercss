@@ -8,7 +8,7 @@ import stripComments from 'strip-comments';
 
 import {
 	LINE_BRK_PATTERN,
-	OUTPUT_FILENAME_PATTERN,
+	MANIFEST_NAME_PATTERN,
 	PATH_STR_EXP_MIN_LEN,
 	REQUIRE_SOURCE_PATTERN,
 	SCRIPT_EXTS,
@@ -168,7 +168,7 @@ const getStylePathRegistrar = ( styleOutputList, ownerPath ) => sourceExpression
  */
 const getScriptPathRegistrar = ( scriptOutputList, ownerPath ) => sourceExpression => {
 	const path = getImportPathFrom( sourceExpression );
-	if( !path.startsWith( '.' ) || OUTPUT_FILENAME_PATTERN.test( path ) ) {
+	if( !path.startsWith( '.' ) || MANIFEST_NAME_PATTERN.test( path ) ) {
 		return;
 	}
 	const extMatch = path.match( SOURCE_EXT_PATTERN );
@@ -335,8 +335,8 @@ const buildImportGraphInto = (
  * @param {FilePath} entryModulePath a single entry module path
  * @returns {FilePath[]} Ordered css import queue from the deepest nested import to the entry module imports
  */
-const inspectModule = function ( entryModulePath ) {
-	if( OUTPUT_FILENAME_PATTERN.test( entryModulePath ) ) {
+const inspectModule = entryModulePath => {
+	if( MANIFEST_NAME_PATTERN.test( entryModulePath ) ) {
 		return [];
 	}
 	const importGraph = [];
