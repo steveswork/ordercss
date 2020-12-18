@@ -75,4 +75,4 @@ The resolution of arguments into a single heirarchized CSS import list is carrie
 
 # Prologue
 
-Consideration was initially given to creating this package as webpack plugin. Also considered were the concerns of individuals using other build systems and the continued compatibility with all complementary build tools. The eventual decision was to provide this package a standalone entity at the present time.
+Consideration was initially given to creating this application as webpack plugin. Also considered were the concerns of developers using other build systems and the continued compatibility with all complementary build tools. The eventual decision was to provide this application as a standalone cli tool at the present time.
