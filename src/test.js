@@ -28,13 +28,13 @@ describe( 'generateOutputModule(...)', () => {
 });
 
 describe( 'getCssImportOrder(...)', () => {
+	const relDirs = [ '/d/e/', '/d/', '/b/' ];
 	const testStubDir = `${ process.cwd() }/test/stub-modules/`;
 	const actual = getCssImportOrder( `${ testStubDir }index.js` );
 	it( 'returns absolute paths of all css module imports in the script module import graph', () => {
 		expect( actual ).toHaveLength( 3 );
 	});
 	it( 'returns css used from the lowest level script dependency up to the dependent scripts', () => {
-		const relDirs = [ '/d/e/', '/d/', '/b/' ];
 		actual.forEach(( f, i ) => expect( f ).toEqual(
 			join( testStubDir, relDirs[ i ], 'style.css' )
 		));
@@ -49,5 +49,14 @@ describe( 'getCssImportOrder(...)', () => {
 		expect( paths ).toHaveLength( 3 );
 		expect( paths[ 0 ] ).toEqual( join( testStubDir, '/d/e/style.css' ) );
 		expect( paths[ 1 ] ).toEqual( join( testStubDir, '/d/style.css' ) );
+	});
+	it( 'hierarchizes aggregated css import file paths from multiple script entry module paths', () => {
+		const _relDirs = [ ...relDirs, '/b/z' ];
+		getCssImportOrder([
+			`${ testStubDir }d/e/index.js`,
+			`${ testStubDir }index.js`
+		]).forEach(( f, i ) => expect( f ).toEqual(
+			join( testStubDir, _relDirs[ i ], 'style.css' )
+		));
 	});
 });

@@ -27,8 +27,9 @@ const getCssModuleCalc = outputFilePath => {
 };
 
 /**
- * @param {FilePath} entryModulePath root module absolute path (in a next.js application: could refer to the current page module)
+ * @param {FilePath|FilePaths[]} entryModulePath root module absolute path(s) (in a next.js application: could refer to the current page module; perhaps preceded by the _app.js file path.)
  * @returns {FilePath[]} aggregated queue containing absolute paths to css import hierarchy from the leaf to the entry module.
+ * @see readme.md for further details on the entryModulePath argument
  */
 export const getCssImportOrder = entryModulePath => ( new Order( entryModulePath ) ).calculate();
 

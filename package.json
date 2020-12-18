@@ -10,7 +10,8 @@
     "chalk": "^4.1.0",
     "esm": "^3.2.25",
     "lodash.get": "^4.4.2",
-    "lodash.isempty": "^4.4.0"
+    "lodash.isempty": "^4.4.0",
+    "strip-comments": "^2.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

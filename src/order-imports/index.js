@@ -4,6 +4,8 @@ import { dirname, join, resolve } from 'path';
 import get from 'lodash.get';
 import isEmpty from 'lodash.isempty';
 
+import stripComments from 'strip-comments';
+
 import {
 	LINE_BRK_PATTERN,
 	OUTPUT_FILENAME_PATTERN,
@@ -60,62 +62,74 @@ const getImportPathFrom = sourceExpression => {
 };
 
 /**
- * Removes comment line preceding program statements bypassing comment non referenced
- * css imports and requireds. This mutates the argument. @see readme.text on how to
- * comment non-referenced css imports and requireds to this strip bypass compliance.
+ * Returns modulePath validity and lines of source file logic text read. `modulePath` param refers to module absolute path
  *
  * @private
- * @param {string[]} sourceCodeLines - lines of code in source file
- * @returns {string[]} - remaining lines of source code after top comment strip
- */
-const stripTopCommentary = sourceCodeLines => {
-	const lines = sourceCodeLines.reverse();
-	let inPreCodeCommentBlock;
-	let currentIndex = lines.length - 1;
-	while( currentIndex > -1 ) {
-		inPreCodeCommentBlock = inPreCodeCommentBlock || (
-			lines[ currentIndex ].startsWith( '/*' )
-		);
-		if( inPreCodeCommentBlock ) {
-			inPreCodeCommentBlock = !lines.splice( currentIndex, 1 ).pop().endsWith( '*/' );
-			currentIndex--;
-			continue;
-		}
-		if( lines[ currentIndex ].startsWith( '//' ) ) {
-			!STYLE_LINE_MARKER.test( lines[ currentIndex ] ) &&
-			lines.splice( currentIndex, 1 );
-			currentIndex--;
-			continue;
-		}
-		break;
-	}
-	return lines.reverse();
-};
-
-/**
- * @param {FilePath} modulePath module absolute path
- * @returns {{
+ * @type {(modulePath: FilePath) => {
  * 		isValidPath: boolean,
  * 		lines: string[]
- * }} modulePath validity and lines of source file logic text read
+ * }}
  */
-const getSourceCodeLines = modulePath => {
-	let text;
-	try {
-		text = readFileSync( modulePath, 'utf-8' )
-	} catch( e ) {
-		if( e.message.startsWith( 'ENOENT' ) ) {
-			return { isValidPath: false };
+const getSourceCodeLines = (() => {
+	const MULTI_STYLE_LINE_MARKER = new RegExp( STYLE_LINE_MARKER.source, 'g' );
+	return modulePath => {
+		let text;
+		try {
+			text = readFileSync( modulePath, 'utf-8' );
+		} catch( e ) {
+			if( e.message.startsWith( 'ENOENT' ) ) {
+				return { isValidPath: false };
+			}
+			throw e;
 		}
-		throw e;
-	}
-	return {
-		isValidPath: true,
-		lines: stripTopCommentary( text.trim().split( LINE_BRK_PATTERN ) )
+		const lines = text.match( MULTI_STYLE_LINE_MARKER ) || [];
+		lines.push( ...stripComments( text ).trim().split( LINE_BRK_PATTERN ) );
+		return { isValidPath: true, lines };
 	};
-};
+})();
 
 /**
+ * Returns in a single line the first statement in the source code where such statement is an aggregate export statement.
+ * It also handles a multi-line aggregate export statement. This mutates the argument when first statement is an aggregate
+ * export. `lines` argument refers to source code lines in a module file
+ *
+ * @private
+ * @type {(lines: string[]) => string}
+ */
+const dequeueAggregateExportStatement = (() => {
+	const exclusiveExportMarker = /^((((export\s)?\s*{)?\s*[^{}]*)?\s*}\s)?\s*from(\s|$)/;
+	const inclusiveExportMarker = /^(((export\s)?\s*\*\s)|((((export\s)?\s*\*\s)?\s*as\s)?\s*[^\s*]+\s))?\s*from(\s|$)/;
+	const oneLinePattern = /^export\s((\*(\sas\s[^\s*]+)?)|({\s*[^'"}]+\s*}))\sfrom\s['"][^'"]+['"];?$/;
+	/** @type {(statement: string) => boolean} */
+	const isValidStatement = statement => oneLinePattern.test( statement );
+	return lines => {
+		let count = 0;
+		let markerType;
+		do {
+			if( exclusiveExportMarker.test( lines[ count ] ) ) {
+				markerType = 'exclusive';
+			} else if( inclusiveExportMarker.test( lines[ count ] ) ) {
+				markerType = 'inclusive';
+			}
+			count++;
+		} while( count < lines.length && markerType === undefined );
+		if( markerType === undefined ) {
+			return;
+		}
+		if( count < lines.length && !/\s+['"][^'"]+['"]$/.test( lines[ count ] ) ) {
+			count++;
+		}
+		const statement = lines.slice( 0, count ).join( ' ' ).replace( /\s+/, ' ' );
+		if( !isValidStatement( statement ) ) {
+			return;
+		}
+		lines.splice( 0, count );
+		return statement;
+	};
+})();
+
+/**
+ * @private
  * @param {string[]} lines code lines
  * @returns {string} a single import statement
  */
@@ -130,6 +144,7 @@ const dequeueImportStatement = lines => {
 };
 
 /**
+ * @private
  * @param {FilePath[]} styleOutputList a list into which to collect all non-referenced CSS import source paths mentioned in the current module
  * @param {FilePath} ownerPath absolute path of the current module containing the import/require expressions
  * @returns {(sourceExpression: string) => void} Registrar
@@ -144,6 +159,7 @@ const getStylePathRegistrar = ( styleOutputList, ownerPath ) => sourceExpression
 };
 
 /**
+ * @private
  * @param {ScriptImport[]} scriptOutputList a list into which to collect all possible script file paths for script import source paths mentioned in the current module
  * @param {FilePath} ownerPath absolute path of the current module containing the import/require expressions
  * @returns {(sourceExpression: string) => void} Registrar
@@ -177,6 +193,7 @@ const getScriptPathRegistrar = ( scriptOutputList, ownerPath ) => sourceExpressi
 };
 
 /**
+ * @private
  * @param {FilePath} modulePath absolute path of the current module whose dependencies are being collected
  * @returns {{
  * 		isValidPath: boolean,
@@ -193,8 +210,9 @@ const pullJsDependencyPaths = modulePath => {
 	const styles = [];
 	const registerScriptPath = getScriptPathRegistrar( scripts, modulePath );
 	const registerStylePath = getStylePathRegistrar( styles, modulePath );
+	const skippedLines = [];
 	while( lines.length ) {
-		if( lines[ 0 ].startsWith( 'import ' ) ) {
+		if( /^import(\s|$)/.test( lines[ 0 ] ) ) {
 			registerScriptPath( dequeueImportStatement( lines ));
 			continue;
 		}
@@ -202,13 +220,20 @@ const pullJsDependencyPaths = modulePath => {
 			registerStylePath( lines.shift() );
 			continue;
 		}
-		break;
+		if( /^export(\s|$)/.test( lines[ 0 ] ) ) {
+			const statement = dequeueAggregateExportStatement( lines );
+			if( !isEmpty( statement ) ) {
+				registerScriptPath( statement );
+				continue;
+			}
+		}
+		skippedLines.push( lines.shift() );
 	}
-	const requiredPaths = [];
-	while( lines.length ) {
-		const paths = lines.shift().match( REQUIRE_SOURCE_PATTERN );
-		paths !== null && requiredPaths.push( ...paths );
-	}
+	const requiredPaths = (
+		skippedLines.join( ' ' )
+			.replace( /\s{2,}/g, ' ' )
+			.match( REQUIRE_SOURCE_PATTERN )
+	) || [];
 	requiredPaths.length && Array
 		.from( new Set( requiredPaths ) )
 		.forEach( registerScriptPath );
@@ -216,6 +241,7 @@ const pullJsDependencyPaths = modulePath => {
 };
 
 /**
+ * @private
  * @param {FilePath[][]} graph
  * @param {{[x:string]: FilePath[]}} cssMap contains a list of css  absolute paths per js/ts module where the key equals js/ts module absolute path
  * @param {FilePath} entryModulePath  entry module absolute path
@@ -253,6 +279,7 @@ const buildCssDependencyQueue = ( graph, cssMap, entryModulePath ) => {
 };
 
 /**
+ * @private
  * @param {FilePath[][]} graph js/ts import graph containing js/ts absolute paths
  * @param {{[x:string]: FilePath[]}} cssMap contains a list of css absolute paths per js/ts module import path argument where key equals js/ts module import path argument
  * @param {FilePath} modulePath js/ts module absolute path
@@ -276,7 +303,7 @@ const buildImportGraphInto = (
 		isValidPath, scripts, styles
 	} = pullJsDependencyPaths( modulePath );
 	if( isValidPath === false ) {
-		return { success: isValidPath };
+		return { success: false };
 	}
 	cssMap[ modulePath ] = styles;
 	if( isEmpty( scripts ) ) {
@@ -303,16 +330,34 @@ const buildImportGraphInto = (
 	return { success: true };
 };
 
+/**
+ * @private
+ * @param {FilePath} entryModulePath a single entry module path
+ * @returns {FilePath[]} Ordered css import queue from the deepest nested import to the entry module imports
+ */
+const inspectModule = function ( entryModulePath ) {
+	if( OUTPUT_FILENAME_PATTERN.test( entryModulePath ) ) {
+		return [];
+	}
+	const importGraph = [];
+	const cssImportMap = {};
+	buildImportGraphInto( importGraph, cssImportMap, entryModulePath );
+	return buildCssDependencyQueue( importGraph, cssImportMap, entryModulePath );
+};
+
 class CssOrder {
 	/**
 	 * Creates an instance of CssOrder.
 	 * @constructor
 	 * @memberof CssOrder
- 	 * @param {FilePath} entryModulePath entry module absolute path
+ 	 * @param {FilePath|FilePath[]} entryModulePath root module absolute path(s) (in a next.js application: could refer to the current page module; perhaps preceded by the _app.js file path.)
+ 	 * @see readme.md for further details on the entryModulePath argument
 	 */
 	constructor( entryModulePath ) {
-		this.entryModulePath = resolve( entryModulePath );
 		this.orderedCssPaths = [];
+		this.entryModulePaths = Array.isArray( entryModulePath )
+			? entryModulePath
+			: [ entryModulePath ];
 	}
 }
 
@@ -321,13 +366,14 @@ class CssOrder {
  * @returns {FilePath[]} Ordered css import queue from the deepest nested import to the entry module imports
  */
 CssOrder.prototype.calculate = function () {
-	if( OUTPUT_FILENAME_PATTERN.test( this.entryModulePath ) ) {
+	if( isEmpty( this.entryModulePaths ) ) {
 		return this.orderedCssPaths;
 	}
-	const importGraph = [];
-	const cssImportMap = {};
-	buildImportGraphInto( importGraph, cssImportMap, this.entryModulePath );
-	this.orderedCssPaths = buildCssDependencyQueue( importGraph, cssImportMap, this.entryModulePath );
+	const cssPaths = [];
+	this.entryModulePaths.reverse().forEach(
+		e => cssPaths.push( ...inspectModule( e ) )
+	);
+	this.orderedCssPaths = Array.from( new Set( cssPaths ) );
 	return this.orderedCssPaths;
 };
 
@@ -335,8 +381,8 @@ export default CssOrder;
 
 /** @typedef {string} FilePath */
 /**
- * `ScriptImportGraphEntry.key` refers to source path argument of the import/require expression
- * `ScriptImportGraphEntry.paths` refers to all possible supported script matches for such source path argument
+ * `ScriptImportEntry.key` refers to source path argument of the import/require expression
+ * `ScriptImportEntry.paths` refers to all possible supported script matches for such source path argument
  * @typedef {{
  * 		key: string,
  * 		paths: FilePath[]
