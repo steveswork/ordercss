@@ -65,11 +65,13 @@ run `ordercss <...main entry module path>`
 
 The ordercss cli is variadic. The lone ***mainEntryModulePath*** is a required argument set bearing the file location(s) of one or many module(s) whose dependency graph(s) would be inspected for non-referenced css module imports and curated. The expected parameter value for each argument item is the absolute path to the entry module file or the entry module file path relative to the current working directory.
 
-Note: the motivation behind the support for the variadic functionality is the accommodation for breaks in the in the import/require sequence. One good example of this is the disconnect between the next.js pages/_app.js and page/<specific_page>.js. For such a scenario, the following cli command is applicable:
+**Note:** for usual use-cases, it is advisable to enter path arguments heirarchically beginning from the logical top-most module.
+
+The motivation behind the support for variadic functionality is the accommodation for breaks in the import/require sequence. One good example of this use-case is the disconnect between the next.js pages/_app.js and page/<specific_page>.js. For such a scenario, the following sample cli command is applicable:
 
 `ordercss <pages dirname>/pages/_app.js <pages dirname>/pages/<specific page>.js`
 
-The resolution of the arguments into a single heirarchized CSS import list is carried out in a LIFO manner. The resulting css manifest module is created for the module residing in and stored in the parent directory of the last path argument. 
+The resolution of arguments into a single heirarchized CSS import list is carried out in a LIFO manner. The resulting css manifest module is created for the module residing in and stored in the parent directory of the last path argument. 
 
 # Prologue
 
