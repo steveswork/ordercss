@@ -181,7 +181,7 @@ const getScriptPathRegistrar = ( scriptOutputList, ownerPath ) => sourceExpressi
 	let absolutePathPrefix = getChildAbsolutePath( ownerPath, path );
 	const paths = [];
 	if( /\.\/?$/.test( path ) ) {
-		absolutePathPrefix = join( path, '/index' );
+		absolutePathPrefix = join( absolutePathPrefix, '/index' );
 	}
 	for( const scriptExt of SCRIPT_EXTS ) {
 		paths.push( `${ absolutePathPrefix }${ scriptExt }` );
