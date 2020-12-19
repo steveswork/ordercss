@@ -25,7 +25,7 @@ export const runCli = entryModulePaths => {
 	console.log( orderedCssPaths.join( '\n' ) );
 	console.info( chalk.blue.bold( 'Listing completed.' ) );
 	try {
-		generateOutputModule( orderedCssPaths, realEntryPaths.slice( -1 ).pop() );
+		generateOutputModule( orderedCssPaths, realEntryPaths[ 0 ] );
 		console.log( chalk.green.bold( 'Module update completed.' ) );
 	} catch ( e ) {
 		console.log( '\n\n%s', chalk.yellow.bold( 'Unsuccessful module update attempt.' ) );
