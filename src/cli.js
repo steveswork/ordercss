@@ -16,14 +16,20 @@ export const runCli = entryModulePaths => {
 	const realEntryPaths = entryModulePaths.map( getAbsolutePath );
 	const orderedCssPaths = getCssImportOrder( realEntryPaths );
 	if( isEmpty( orderedCssPaths ) ) {
-		console.warn( chalk.yellow.bold(
-			'No compliantly commented CSS imports detected in the generated dependency graph.'
+		console.warn( '\n\n%s\n%s', chalk.yellow.bold(
+			'No compliantly commented CSS imports detected in the generated dependency graph for:'
+		), chalk.red.bold(
+			realEntryPaths.join( ' >> ' )
 		) );
 		return;
 	}
-	console.info( '\n\n%s:', chalk.blue.underline.bold( 'Ordered CSS Import Listing' ) );
+	console.info(
+		'\n\n%s\n%s\n',
+		chalk.blue.underline.bold( 'Ordered CSS Import Listing for:' ),
+		chalk.green.bold( realEntryPaths.join( ' >> ' ) )
+	);
 	console.log( orderedCssPaths.join( '\n' ) );
-	console.info( chalk.blue.bold( 'Listing completed.' ) );
+	console.info( '\n%s', chalk.blue.bold( 'Listing completed.' ) );
 	try {
 		generateOutputModule( orderedCssPaths, realEntryPaths[ 0 ] );
 		console.log( chalk.green.bold( 'Module update completed.' ) );
