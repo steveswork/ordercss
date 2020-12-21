@@ -1,7 +1,7 @@
 {
   "author": {
     "name": "Stephen Isienyi",
-    "email": "stephen.isienyi@gmail.com"
+    "email": "stephen.isienyi@webkrafting.com"
   },
   "bin": {
     "@webKrafters/ordercss": "bin/ordercss.js",
@@ -9,8 +9,8 @@
     "ordercss": "bin/ordercss.js"
   },
   "contributors": [{
-    "email": "stephen.isienyi@gmail.com",
-    "name": "Stephen Isienyi",
+    "email": "stephen.isienyi@webkrafting.com",
+    "name": "steveswork",
     "url": "https://github.com/steveswork"
   }],
   "description": "A CLI for curating and listing imports CSS module file paths according to import module hierarchy",
