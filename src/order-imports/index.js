@@ -356,7 +356,7 @@ class CssOrder {
 	constructor( entryModulePath ) {
 		this.orderedCssPaths = [];
 		this.entryModulePaths = Array.isArray( entryModulePath )
-			? entryModulePath
+			? entryModulePath.slice()
 			: [ entryModulePath ];
 	}
 }
