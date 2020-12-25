@@ -10,7 +10,7 @@ npm i -D @webkrafters/ordercss
 
 # Intro
 
-This is a cli tool created to alleviate the CSS extraction conflict order issues encountered in next.js and similarly situated applications. It is intended to be run BEFORE the build process where the aforementioned CSS ordering conflict error is a real concern.
+This is a cli tool created to alleviate the CSS extraction conflict order issues encountered in next.js and similarly situated applications. It is intended to be run BEFORE the build process where the aforementioned CSS ordering conflict error is a real concern. ***And it would only ever need to be run when new [non-referenced CSS import statements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Import_a_module_for_its_side_effects_only) are made to project modules as described in the [Requirements](#requirements) section.***
 
 For those using CSS-in-JS or other scoped CSS technologies but are still receiving the CSS extraction conflict order warnings, such warnings may be suppressed by merely setting the `ignoreOrder` property of their CSS extractor options (for those that support it). For the rest of the applications, doing same may suppress such warnings but may not abate style misapplication and other effects of CSS ordering conflicts.
 
@@ -49,7 +49,6 @@ It is advisable to make in advance, within the main entry script module, a non-r
     import './<main entry script module filename>_css_manifest.<js|ts>'
     require('./<main entry script module filename>_css_manifest.<js|ts>')
     require './<main entry script module filename>_css_manifest.<js|ts>'
-
  
 ### Requirements
 
