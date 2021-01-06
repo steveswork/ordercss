@@ -160,7 +160,7 @@ const getStylePathRegistrar = ( styleOutputList, ownerPath ) => sourceExpression
 
 /**
  * @private
- * @param {ScriptImport[]} scriptOutputList a list into which to collect all possible script file paths for script import source paths mentioned in the current module
+ * @param {ScriptImportEntry[]} scriptOutputList a list into which to collect all possible script file paths for script import source paths mentioned in the current module
  * @param {FilePath} ownerPath absolute path of the current module containing the import/require expressions
  * @returns {(sourceExpression: string) => void} Registrar
  * @see getImportPathFrom for further details on the sourceExpression registrar argument
